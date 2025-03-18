@@ -1,0 +1,30 @@
+FROM nvidia/cuda:12.0-devel-ubuntu22.04
+
+# Set environment variables for CUDA
+ENV CUDA_INSTALL_PATH=/usr/local/cuda
+ENV CUDACXX=$CUDA_INSTALL_PATH/bin/nvcc
+ENV PATH="$CUDA_INSTALL_PATH/bin:$PATH"
+ENV LD_LIBRARY_PATH="$CUDA_INSTALL_PATH/lib64:$LD_LIBRARY_PATH"
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    cmake \
+    g++ \
+    python3 \
+    python3-pip \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone CUTLASS repository
+WORKDIR /workspace
+RUN git clone https://github.com/NVIDIA/cutlass.git && cd cutlass
+
+# Create build directory and compile CUTLASS
+WORKDIR /workspace/cutlass
+RUN mkdir build && cd build && \
+    cmake .. -DCUTLASS_NVCC_ARCHS=90a && \
+    make -j$(nproc)
+
+# Set the working directory to run tests
+WORKDIR /workspace/cutlass/build
+CMD ["ctest"]
