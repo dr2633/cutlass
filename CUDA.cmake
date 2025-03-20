@@ -40,6 +40,31 @@ endif()
 enable_language(CUDA)
 find_package(CUDAToolkit REQUIRED)
 
+# Ensure CUDAToolkit_INCLUDE_DIR is properly set (handle package-managed CUDA installations)
+if(NOT CUDAToolkit_INCLUDE_DIR)
+  find_path(CUDAToolkit_INCLUDE_DIR cuda_runtime.h
+    PATHS
+    /usr/include
+    /usr/local/cuda/include
+    /usr/lib/cuda/include
+    NO_DEFAULT_PATH
+  )
+endif()
+
+# Ensure CUDAToolkit_LIBRARY_DIR is properly set (for cuBLAS and other libraries)
+if(NOT CUDAToolkit_LIBRARY_DIR)
+  find_path(CUDAToolkit_LIBRARY_DIR cublas_v2.h
+    PATHS
+    /usr/lib
+    /usr/local/cuda/lib64
+    /usr/lib/x86_64-linux-gnu
+    /usr/lib/cuda/lib64
+    NO_DEFAULT_PATH
+  )
+endif()
+
+
+
 if(NOT CUDA_VERSION)
   # For backward compatibility with older CMake code.
   set(CUDA_VERSION ${CUDAToolkit_VERSION})
